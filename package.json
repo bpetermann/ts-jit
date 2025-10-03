@@ -1,0 +1,24 @@
+{
+  "name": "ts-jit",
+  "version": "1.0.0",
+  "bin": {
+    "jit": "./app/index.js"
+  },
+  "description": "",
+  "license": "MIT",
+  "author": "bpetermann",
+  "type": "module",
+  "main": "./app/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -p . -w",
+    "dev": "nodemon ./app/index.js"
+  },
+  "dependencies": {
+    "nodemon": "^3.1.10",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2"
+  }
+}
