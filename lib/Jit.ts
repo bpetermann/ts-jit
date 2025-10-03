@@ -1,0 +1,87 @@
+import fs from 'fs';
+import path from 'path';
+import Author from './Author.js';
+import Blob from './Blob.js';
+import Commit from './Commit.js';
+import Database from './Database.js';
+import Entry from './Entry.js';
+import Refs from './Refs.js';
+import Tree from './Tree.js';
+import Workspace from './Workspace.js';
+
+export default class Jit {
+  private command?: string;
+  private dir?: string;
+
+  constructor() {
+    this.command = process.argv[2];
+    this.dir = process.argv[3];
+  }
+
+  main() {
+    switch (this.command) {
+      case 'init':
+        this.create(this.dir);
+        break;
+      case 'commit':
+        this.commit();
+        break;
+      default:
+        throw new Error(`jit: ${this.command} is not a jit command.`);
+    }
+  }
+
+  private commit() {
+    const rootPath = process.cwd();
+    const gitPath = path.join(rootPath, '.git');
+    const dbPath = path.join(gitPath, 'objects');
+
+    const workspace = new Workspace(rootPath);
+    const database = new Database(dbPath);
+    const refs = new Refs(gitPath);
+
+    const entries = workspace.listFiles().map((path) => {
+      const data = workspace.readFile(path);
+      const blob = new Blob(data);
+      database.store(blob);
+
+      const executable = workspace.statFile(path);
+      return new Entry(path, blob.oid, executable);
+    });
+
+    const tree = new Tree(entries);
+    database.store(tree);
+
+    const parent = refs.readHead();
+    const name = process.env.GIT_AUTHOR_NAME;
+    const email = process.env.GIT_AUTHOR_EMAIL;
+    const author = new Author(name, email, Math.floor(Date.now() / 1000));
+    const message = fs.readFileSync(0)?.toString();
+
+    const commit = new Commit(parent, tree.oid!, author, message);
+    database.store(commit);
+    refs.updateHead(commit.oid!);
+
+    const isRoot = !parent ? '(root-commit) ' : '';
+    console.log(`[${isRoot}${tree.oid}] ${message}`);
+    process.exit(0);
+  }
+
+  private create(dir?: string) {
+    const rootPath = path.resolve(dir ?? process.cwd());
+    const gitPath = path.join(rootPath, '.git');
+
+    try {
+      ['objects', 'refs'].forEach((dir) =>
+        fs.mkdirSync(path.join(gitPath, dir), {
+          recursive: true,
+        })
+      );
+
+      console.log(`Initialized empty Jit repository in ${gitPath}`);
+      process.exit(0);
+    } catch (e) {
+      throw new Error(`jit: failed to create folder ${e}`);
+    }
+  }
+}
