@@ -49,8 +49,8 @@ export default class Jit {
       return new Entry(path, blob.oid, executable);
     });
 
-    const tree = new Tree(entries);
-    database.store(tree);
+    const root = Tree.build(entries);
+    root.traverse((tree) => database.store(tree));
 
     const parent = refs.readHead();
     const name = process.env.GIT_AUTHOR_NAME;
@@ -58,12 +58,12 @@ export default class Jit {
     const author = new Author(name, email, Math.floor(Date.now() / 1000));
     const message = fs.readFileSync(0)?.toString();
 
-    const commit = new Commit(parent, tree.oid!, author, message);
+    const commit = new Commit(parent, root.oid!, author, message);
     database.store(commit);
     refs.updateHead(commit.oid!);
 
     const isRoot = !parent ? '(root-commit) ' : '';
-    console.log(`[${isRoot}${tree.oid}] ${message}`);
+    console.log(`[${isRoot}${root.oid}] ${message}`);
     process.exit(0);
   }
 
