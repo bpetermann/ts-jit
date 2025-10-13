@@ -17,6 +17,6 @@
     "outDir": "app",
     "typeRoots": ["node_modules/@types", "index.d.ts"]
   },
-  "exclude": ["tests"],
+  "exclude": ["app", "node_modules"],
   "lib": ["es2015"]
 }
