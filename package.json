@@ -14,9 +14,11 @@
     "watch": "tsc -p . -w",
     "dev": "nodemon ./app/index.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky"
   },
   "dependencies": {
+    "husky": "^9.1.7",
     "nodemon": "^3.1.10",
     "typescript": "^5.9.2"
   },
