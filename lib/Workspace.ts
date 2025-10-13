@@ -26,8 +26,9 @@ export default class Workspace {
     return fs.readFileSync(path.join(this.rootPath, file));
   }
 
-  statFile(path: string): boolean {
-    return this.isExecutable(path);
+  statFile(filePath: string): fs.Stats {
+    const fullPath = path.join(this.rootPath, filePath);
+    return fs.statSync(fullPath);
   }
 
   isExecutable(path: string) {
