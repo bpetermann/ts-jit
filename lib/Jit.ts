@@ -6,6 +6,7 @@ import Blob from './database/Blob.js';
 import Commit from './database/Commit.js';
 import Tree from './database/Tree.js';
 import Entry from './Entry.js';
+import Index from './Index.js';
 import Refs from './Refs.js';
 import Workspace from './Workspace.js';
 
@@ -26,9 +27,34 @@ export default class Jit {
       case 'commit':
         this.commit();
         break;
+      case 'add':
+        this.add();
+        break;
       default:
         throw new Error(`jit: ${this.command} is not a jit command.`);
     }
+  }
+
+  private add() {
+    const rootPath = process.cwd();
+    const gitPath = path.join(rootPath, '.git');
+    const dbPath = path.join(gitPath, 'objects');
+    const indexPath = path.join(gitPath, 'index');
+
+    const workspace = new Workspace(rootPath);
+    const database = new Database(dbPath);
+    const index = new Index(indexPath);
+
+    const pathname = this.dir!;
+    const data = workspace.readFile(pathname);
+    const stat = workspace.statFile(pathname);
+
+    const blob = new Blob(data);
+    database.store(blob);
+    index.add(pathname, blob.oid, stat);
+
+    index.writeUpdates();
+    process.exit(0);
   }
 
   private commit() {
@@ -45,7 +71,7 @@ export default class Jit {
       const blob = new Blob(data);
       database.store(blob);
 
-      const executable = workspace.statFile(path);
+      const executable = workspace.isExecutable(path);
       return new Entry(path, blob.oid, executable);
     });
 
