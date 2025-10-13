@@ -2,9 +2,9 @@ import crypto from 'crypto';
 import fs from 'fs';
 import { deflateSync } from 'node:zlib';
 import path from 'path';
-import Blob from './Blob.js';
-import Commit from './Commit.js';
-import Tree from './Tree.js';
+import Blob from './database/Blob.js';
+import Commit from './database/Commit.js';
+import Tree from './database/Tree.js';
 
 export default class Database {
   private tempChars =
@@ -55,7 +55,7 @@ export default class Database {
     return `tmp_obj_${Array(6)
       .fill(undefined)
       .map(
-        (_) => this.tempChars[Math.floor(Math.random() * this.tempChars.length)]
+        () => this.tempChars[Math.floor(Math.random() * this.tempChars.length)]
       )
       .join('')}`;
   }

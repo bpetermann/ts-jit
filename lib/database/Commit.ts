@@ -1,5 +1,5 @@
-import Author from './Author.js';
-import { JitObject } from './JitObject.js';
+import { JitObject } from 'lib/utils/JitObject';
+import Author from './Author';
 
 export default class Commit implements JitObject {
   private _oid: string | undefined;

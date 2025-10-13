@@ -1,12 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import Author from './Author.js';
-import Blob from './Blob.js';
-import Commit from './Commit.js';
 import Database from './Database.js';
+import Author from './database/Author.js';
+import Blob from './database/Blob.js';
+import Commit from './database/Commit.js';
+import Tree from './database/Tree.js';
 import Entry from './Entry.js';
 import Refs from './Refs.js';
-import Tree from './Tree.js';
 import Workspace from './Workspace.js';
 
 export default class Jit {
