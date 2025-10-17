@@ -1,5 +1,5 @@
-import Entry from '../Entry';
-import { JitObject } from '../utils/JitObject';
+import Entry from '../Entry.js';
+import { JitObject } from '../utils/JitObject.js';
 
 type TreeEntry = Entry | Tree;
 
