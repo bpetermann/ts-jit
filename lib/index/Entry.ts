@@ -45,6 +45,10 @@ export default class Entry {
     );
   }
 
+  get key(): string {
+    return this.path;
+  }
+
   toBuffer(): Buffer {
     const pathBuffer = Buffer.from(this.path, 'utf8');
     const oidBuffer = Buffer.from(this.oid, 'hex');

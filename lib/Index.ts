@@ -4,12 +4,20 @@ import Entry from './index/Entry.js';
 
 export default class Index {
   public entries: Record<string, Entry> = {};
+  public keys: Array<string> = [];
 
   constructor(private readonly pathname: string) {}
 
   add(pathname: string, oid: string, stat: fs.Stats) {
     const entry = Entry.create(pathname, oid, stat);
-    this.entries[pathname.toString()] = entry;
+    this.keys.push(entry.key);
+    this.entries[entry.key] = entry;
+  }
+
+  eachEntry(): Array<Entry> {
+    return this.keys
+      .sort((a, b) => a.localeCompare(b))
+      .map((key) => this.entries[key]);
   }
 
   writeUpdates(): boolean {
@@ -19,11 +27,11 @@ export default class Index {
       const header = Buffer.alloc(12);
       header.write('DIRC', 0, 4, 'ascii');
       header.writeUInt32BE(2, 4);
-      header.writeUInt32BE(Object.keys(this.entries).length, 8);
+      const entries = this.eachEntry();
+      header.writeUInt32BE(entries.length, 8);
       buffers.push(header);
 
-      for (const entry of Object.values(this.entries))
-        buffers.push(entry.toBuffer());
+      for (const entry of this.eachEntry()) buffers.push(entry.toBuffer());
 
       const fileBuffer = Buffer.concat(buffers);
 

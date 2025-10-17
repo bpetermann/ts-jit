@@ -13,10 +13,12 @@ import Workspace from './Workspace.js';
 export default class Jit {
   private command?: string;
   private dir?: string;
+  private args?: string[];
 
   constructor() {
     this.command = process.argv[2];
     this.dir = process.argv[3];
+    this.args = process.argv.slice(3);
   }
 
   main() {
@@ -45,13 +47,15 @@ export default class Jit {
     const database = new Database(dbPath);
     const index = new Index(indexPath);
 
-    const pathname = this.dir!;
-    const data = workspace.readFile(pathname);
-    const stat = workspace.statFile(pathname);
+    this.args?.forEach((dir) => {
+      const pathname = dir;
+      const data = workspace.readFile(pathname);
+      const stat = workspace.statFile(pathname);
 
-    const blob = new Blob(data);
-    database.store(blob);
-    index.add(pathname, blob.oid, stat);
+      const blob = new Blob(data);
+      database.store(blob);
+      index.add(pathname, blob.oid, stat);
+    });
 
     index.writeUpdates();
     process.exit(0);
