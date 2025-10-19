@@ -32,6 +32,47 @@ git ls-files --stage
 git cat-file -p <sha>
 ```
 
+## ⚙️ Installation & Usage
+
+Before running `jit`, you’ll need to make it available locally or globally.
+
+### Option 1: Local install (recommended)
+Install the CLI into your project:
+
+```bash
+npm i <path-to-ts-jit>
+```
+
+```bash
+npx jit init
+npx jit add hello.txt
+```
+
+### Option 2: Global link (for development)
+From the root of this repository:
+
+```bash
+npm link
+```
+Now you can use `jit` anywhere:
+
+```bash
+jit init
+jit add hello.txt
+jit commit
+```
+
+### Option 3: Run directly via Node
+
+If you prefer not to install or link:
+
+```bash
+node path/to/ts-jit/app/index.js init
+```
+
+> **Note**: The shorthand command jit <command> only works if the package is linked globally (via npm link) or installed locally and run with npx.
+
+
 ## 🧪 Example
 
 ```bash
