@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'path';
+import { join, resolve } from 'path';
 import Database from './Database.js';
 import Author from './database/Author.js';
 import Blob from './database/Blob.js';
@@ -39,32 +39,40 @@ export default class Jit {
 
   private add() {
     const rootPath = process.cwd();
-    const gitPath = path.join(rootPath, '.git');
-    const dbPath = path.join(gitPath, 'objects');
-    const indexPath = path.join(gitPath, 'index');
+    const gitPath = join(rootPath, '.git');
+    const dbPath = join(gitPath, 'objects');
+    const indexPath = join(gitPath, 'index');
 
     const workspace = new Workspace(rootPath);
     const database = new Database(dbPath);
     const index = new Index(indexPath);
 
-    this.args?.forEach((dir) => {
-      const pathname = dir;
-      const data = workspace.readFile(pathname);
-      const stat = workspace.statFile(pathname);
+    this.args?.forEach((arg) => {
+      const path = resolve(arg);
 
-      const blob = new Blob(data);
-      database.store(blob);
-      index.add(pathname, blob.oid, stat);
+      if (!fs.existsSync(path)) {
+        console.error(`Path not found: ${path}`);
+        return;
+      }
+
+      workspace.listFiles(path)?.forEach((pathname) => {
+        const data = workspace.readFile(pathname);
+        const stat = workspace.statFile(pathname);
+
+        const blob = new Blob(data);
+        database.store(blob);
+        index.add(pathname, blob.oid, stat);
+      });
     });
 
     index.writeUpdates();
-    process.exit(0);
+    return;
   }
 
   private commit() {
     const rootPath = process.cwd();
-    const gitPath = path.join(rootPath, '.git');
-    const dbPath = path.join(gitPath, 'objects');
+    const gitPath = join(rootPath, '.git');
+    const dbPath = join(gitPath, 'objects');
 
     const workspace = new Workspace(rootPath);
     const database = new Database(dbPath);
@@ -94,16 +102,16 @@ export default class Jit {
 
     const isRoot = !parent ? '(root-commit) ' : '';
     console.log(`[${isRoot}${root.oid}] ${message}`);
-    process.exit(0);
+    return;
   }
 
   private create(dir?: string) {
-    const rootPath = path.resolve(dir ?? process.cwd());
-    const gitPath = path.join(rootPath, '.git');
+    const rootPath = resolve(dir ?? process.cwd());
+    const gitPath = join(rootPath, '.git');
 
     try {
       ['objects', 'refs'].forEach((dir) =>
-        fs.mkdirSync(path.join(gitPath, dir), {
+        fs.mkdirSync(join(gitPath, dir), {
           recursive: true,
         })
       );
