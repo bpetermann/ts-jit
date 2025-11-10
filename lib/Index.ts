@@ -4,18 +4,18 @@ import Entry from './index/Entry.js';
 
 export default class Index {
   public entries: Record<string, Entry> = {};
-  public keys: Array<string> = [];
+  private keys: Set<string> = new Set();
 
   constructor(private readonly pathname: string) {}
 
   add(pathname: string, oid: string, stat: fs.Stats) {
     const entry = Entry.create(pathname, oid, stat);
-    this.keys.push(entry.key);
+    this.keys.add(entry.key);
     this.entries[entry.key] = entry;
   }
 
-  eachEntry(): Array<Entry> {
-    return this.keys
+  eachEntry(): Entry[] {
+    return Array.from(this.keys)
       .sort((a, b) => a.localeCompare(b))
       .map((key) => this.entries[key]);
   }
