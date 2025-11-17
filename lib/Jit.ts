@@ -5,7 +5,6 @@ import Author from './database/Author.js';
 import Blob from './database/Blob.js';
 import Commit from './database/Commit.js';
 import Tree from './database/Tree.js';
-import Entry from './Entry.js';
 import Index from './Index.js';
 import Refs from './Refs.js';
 import Workspace from './Workspace.js';
@@ -76,20 +75,13 @@ export default class Jit {
     const gitPath = join(rootPath, '.git');
     const dbPath = join(gitPath, 'objects');
 
-    const workspace = new Workspace(rootPath);
     const database = new Database(dbPath);
+    const index = new Index(join(gitPath, 'index'));
     const refs = new Refs(gitPath);
 
-    const entries = workspace.listFiles().map((path) => {
-      const data = workspace.readFile(path);
-      const blob = new Blob(data);
-      database.store(blob);
+    index.loadForUpdate();
 
-      const executable = workspace.isExecutable(path);
-      return new Entry(path, blob.oid, executable);
-    });
-
-    const root = Tree.build(entries);
+    const root = Tree.build(index.eachEntry());
     root.traverse((tree) => database.store(tree));
 
     const parent = refs.readHead();
