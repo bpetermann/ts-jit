@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import pathModule from 'path';
 
 export default class Entry {
   static REGULAR_MODE = 0o100644;
@@ -92,5 +93,65 @@ export default class Entry {
     while (offset < paddedSize) buffer[offset++] = 0;
 
     return buffer;
+  }
+
+  static parse(buf: Buffer): Entry {
+    let offset = 0;
+    const read32 = () => {
+      const v = buf.readUInt32BE(offset);
+      offset += 4;
+      return v;
+    };
+
+    const ctime = read32();
+    const ctime_nsec = read32();
+    const mtime = read32();
+    const mtime_nsec = read32();
+    const dev = read32();
+    const ino = read32();
+    const mode = read32();
+    const uid = read32();
+    const gid = read32();
+    const size = read32();
+
+    const oid = buf.slice(offset, offset + 20).toString('hex');
+    offset += 20;
+
+    const flags = buf.readUInt16BE(offset);
+    offset += 2;
+
+    const end = buf.indexOf(0x00, offset);
+    if (end === -1) throw new Error('Path not null-terminated');
+
+    const path = buf.slice(offset, end).toString('utf8');
+
+    return new Entry(
+      ctime,
+      ctime_nsec,
+      mtime,
+      mtime_nsec,
+      dev,
+      ino,
+      mode,
+      uid,
+      gid,
+      size,
+      oid,
+      flags,
+      path
+    );
+  }
+
+  get basename(): string {
+    return pathModule.basename(this.path);
+  }
+
+  parentDirectories(): string[] {
+    const parts = this.path.split(pathModule.sep);
+    const result: string[] = [];
+    for (let i = 0; i < parts.length - 1; i++) {
+      result.push(parts.slice(0, i + 1).join(pathModule.sep));
+    }
+    return result;
   }
 }
