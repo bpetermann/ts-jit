@@ -47,6 +47,8 @@ export default class Jit {
     const database = new Database(dbPath);
     const index = new Index(indexPath);
 
+    index.loadForUpdate();
+
     this.args?.forEach((arg) => {
       const path = resolve(arg);
 
