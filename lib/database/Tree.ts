@@ -1,24 +1,21 @@
-import Entry from '../Entry.js';
+import Entry from 'lib/index/Entry.js';
 import { JitObject } from '../utils/JitObject.js';
-
 type TreeEntry = Entry | Tree;
 
 export default class Tree implements JitObject {
   private _oid: string | undefined;
-  private readonly DIRECTORY_MODE = '40000';
   public entries: Record<string, TreeEntry> = {};
+  static TREE_MODE = 0o40000;
 
   constructor() {}
 
-  static build(entries: Array<Entry>) {
-    const sortedEntries = entries.sort((a, b) =>
-      a.name.toString().localeCompare(b.name.toString())
-    );
+  static build(entries: Entry[]) {
+    const sortedEntries = entries.sort((a, b) => a.path.localeCompare(b.path));
 
     const tree = new Tree();
 
     sortedEntries.forEach((entry) =>
-      tree.addEntry(entry.descendUntilLast(), entry)
+      tree.addEntry(entry.parentDirectories(), entry)
     );
 
     return tree;
@@ -28,16 +25,16 @@ export default class Tree implements JitObject {
     return this._oid;
   }
 
-  get mode(): string {
-    return this.DIRECTORY_MODE;
-  }
-
   set oid(id: string) {
     this._oid = id;
   }
 
   type(): string {
     return 'tree';
+  }
+
+  get mode(): number {
+    return Tree.TREE_MODE;
   }
 
   addEntry(parents: string[], entry: Entry): void {
@@ -63,7 +60,10 @@ export default class Tree implements JitObject {
   toBuffer(): Buffer {
     const buffers: Buffer[] = Object.entries(this.entries).map(
       ([name, entry]) => {
-        const modeAndName = Buffer.from(`${entry.mode} ${name}\0`, 'utf8');
+        const modeStr = (
+          entry instanceof Tree ? entry.mode : entry.mode
+        ).toString(8);
+        const modeAndName = Buffer.from(`${modeStr} ${name}\0`, 'utf8');
         const oidBuffer = Buffer.from(entry.oid!, 'hex');
         return Buffer.concat([modeAndName, oidBuffer]);
       }
