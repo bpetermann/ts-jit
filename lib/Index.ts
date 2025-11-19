@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
-import * as fs from 'fs';
-import Checksum from './Checksum.js';
+import { Stats, openSync, writeFileSync } from 'fs';
+import Checksum from './index/Checksum.js';
 import Entry from './index/Entry.js';
 
 const HEADER_SIZE = 12;
@@ -8,14 +8,17 @@ const SIGNATURE = 'DIRC';
 const VERSION = 2;
 const ENTRY_MIN_SIZE = 64;
 const ENTRY_BLOCK = 8;
+
 export default class Index {
   public entries: Record<string, Entry> = {};
   private keys: Set<string> = new Set();
   private changed: boolean = false;
 
-  constructor(private readonly pathname: string) {}
+  constructor(private readonly pathname: string) {
+    this.clear();
+  }
 
-  add(pathname: string, oid: string, stat: fs.Stats) {
+  add(pathname: string, oid: string, stat: Stats) {
     const entry = Entry.create(pathname, oid, stat);
     this.storeEntry(entry);
     this.changed = true;
@@ -27,7 +30,7 @@ export default class Index {
       .map((key) => this.entries[key]);
   }
 
-  loadForUpdate(): void {
+  load(): void {
     this.clear();
 
     const file = this.openIndexFile();
@@ -40,17 +43,15 @@ export default class Index {
     }
   }
 
-  readEntries(reader: Checksum, count: number) {
+  readEntries(reader: Checksum, count: number): void {
     for (let i = 0; i < count; i++) {
       let entry = Buffer.from(reader.read(ENTRY_MIN_SIZE));
 
       while (entry[entry.length - 1] !== 0x00) {
-        const extra = reader.read(ENTRY_BLOCK);
-        entry = Buffer.concat([entry, extra]);
+        entry = Buffer.concat([entry, reader.read(ENTRY_BLOCK)]);
       }
 
-      const parsed = Entry.parse(entry);
-      this.storeEntry(parsed);
+      this.storeEntry(Entry.parse(entry));
     }
   }
 
@@ -62,8 +63,7 @@ export default class Index {
   readHeader(reader: Checksum): number {
     const data = reader.read(HEADER_SIZE);
 
-    const signature = data.slice(0, 4).toString('ascii');
-
+    const signature = data.subarray(0, 4).toString('ascii');
     const version = data.readUInt32BE(4);
     const count = data.readUInt32BE(8);
 
@@ -80,6 +80,34 @@ export default class Index {
     return count;
   }
 
+  writeUpdates(): void {
+    if (this.changed) {
+      try {
+        const buffers: Buffer[] = [];
+
+        const header = Buffer.alloc(12);
+        header.write(SIGNATURE, 0, 4, 'ascii');
+        header.writeUInt32BE(2, 4);
+
+        const entries = this.eachEntry();
+        header.writeUInt32BE(entries.length, 8);
+        buffers.push(header);
+
+        for (const entry of entries) buffers.push(entry.toBuffer());
+
+        const fileBuffer = Buffer.concat(buffers);
+        const checksum = createHash('sha1').update(fileBuffer).digest();
+
+        const finalBuffer = Buffer.concat([fileBuffer, checksum]);
+        writeFileSync(this.pathname, finalBuffer);
+
+        this.changed = false;
+      } catch (err) {
+        console.error('Failed to write index:', err);
+      }
+    }
+  }
+
   private clear(): void {
     this.entries = {};
     this.keys = new Set();
@@ -88,38 +116,9 @@ export default class Index {
 
   private openIndexFile(): number | null {
     try {
-      return fs.openSync(this.pathname, 'r');
+      return openSync(this.pathname, 'r');
     } catch {
       return null;
-    }
-  }
-
-  writeUpdates(): boolean {
-    if (!this.changed) return true;
-    try {
-      const buffers: Buffer[] = [];
-
-      const header = Buffer.alloc(12);
-      header.write('DIRC', 0, 4, 'ascii');
-      header.writeUInt32BE(2, 4);
-      const entries = this.eachEntry();
-      header.writeUInt32BE(entries.length, 8);
-      buffers.push(header);
-
-      for (const entry of entries) buffers.push(entry.toBuffer());
-
-      const fileBuffer = Buffer.concat(buffers);
-      const checksum = createHash('sha1').update(fileBuffer).digest();
-
-      const finalBuffer = Buffer.concat([fileBuffer, checksum]);
-      fs.writeFileSync(this.pathname, finalBuffer);
-
-      this.changed = false;
-
-      return true;
-    } catch (err) {
-      console.error('Failed to write index:', err);
-      return false;
     }
   }
 }

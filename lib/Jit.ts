@@ -46,7 +46,7 @@ export default class Jit {
     const database = new Database(dbPath);
     const index = new Index(indexPath);
 
-    index.loadForUpdate();
+    index.load();
 
     this.args?.forEach((arg) => {
       const path = resolve(arg);
@@ -79,7 +79,7 @@ export default class Jit {
     const index = new Index(join(gitPath, 'index'));
     const refs = new Refs(gitPath);
 
-    index.loadForUpdate();
+    index.load();
 
     const root = Tree.build(index.eachEntry());
     root.traverse((tree) => database.store(tree));

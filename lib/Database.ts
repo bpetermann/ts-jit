@@ -45,7 +45,7 @@ export default class Database {
     }
   }
 
-  private getBuffer(object: Blob | Tree | Commit) {
+  private getBuffer(object: Blob | Tree | Commit): Buffer<ArrayBufferLike> {
     return object instanceof Tree
       ? object.toBuffer()
       : Buffer.from(object.toString(), 'utf8');
