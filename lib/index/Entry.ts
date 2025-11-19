@@ -1,12 +1,13 @@
 import * as fs from 'fs';
+import JitEntry from 'lib/utils/JitEntry.js';
 import pathModule from 'path';
 
-export default class Entry {
-  static REGULAR_MODE = 0o100644;
-  static EXECUTABLE_MODE = 0o100755;
-  static MAX_PATH_SIZE = 0xfff;
-  static ENTRY_BLOCK = 8;
+const REGULAR_MODE = 0o100644;
+const EXECUTABLE_MODE = 0o100755;
+const MAX_PATH_SIZE = 0xfff;
+const ENTRY_BLOCK = 8;
 
+export default class Entry implements JitEntry {
   constructor(
     public ctime: number,
     public ctime_nsec: number,
@@ -25,9 +26,8 @@ export default class Entry {
 
   static create(pathname: string, oid: string, stat: fs.Stats) {
     const path = pathname.toString();
-    const mode =
-      (stat.mode & 0o111) !== 0 ? Entry.EXECUTABLE_MODE : Entry.REGULAR_MODE;
-    const flags = Math.min(Buffer.byteLength(path), Entry.MAX_PATH_SIZE);
+    const mode = (stat.mode & 0o111) !== 0 ? EXECUTABLE_MODE : REGULAR_MODE;
+    const flags = Math.min(Buffer.byteLength(path), MAX_PATH_SIZE);
 
     return new Entry(
       Math.floor(stat.ctime.getTime() / 1000),
@@ -56,8 +56,7 @@ export default class Entry {
 
     const headerSize = 4 * 10 + 20 + 2;
     const totalSize = headerSize + pathBuffer.length + 1;
-    const pad =
-      (Entry.ENTRY_BLOCK - (totalSize % Entry.ENTRY_BLOCK)) % Entry.ENTRY_BLOCK;
+    const pad = (ENTRY_BLOCK - (totalSize % ENTRY_BLOCK)) % ENTRY_BLOCK;
     const paddedSize = totalSize + pad;
 
     const buffer = Buffer.alloc(paddedSize);

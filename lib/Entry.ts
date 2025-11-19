@@ -1,6 +1,11 @@
 import path from 'path';
+import JitEntry from './utils/JitEntry.js';
 
-export default class Entry {
+/**
+ * @deprecated This class is deprecated in favor of `lib/index/Entry.ts`.
+ */
+
+export default class Entry implements JitEntry {
   private readonly REGULAR_MODE = '100644';
   private readonly EXECUTABLE_MODE = '100755';
 
@@ -12,6 +17,10 @@ export default class Entry {
 
   get mode(): string {
     return this.executable ? this.EXECUTABLE_MODE : this.REGULAR_MODE;
+  }
+
+  get path(): string {
+    return this.name;
   }
 
   get basename(): string {
@@ -27,5 +36,9 @@ export default class Entry {
     }
 
     return result;
+  }
+
+  parentDirectories(): string[] {
+    return this.descendUntilLast();
   }
 }
