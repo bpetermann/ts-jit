@@ -99,7 +99,7 @@ export default class Jit {
     return;
   }
 
-  private create(dir?: string) {
+  create(dir?: string) {
     const rootPath = resolve(dir ?? process.cwd());
     const gitPath = join(rootPath, '.git');
 
@@ -111,7 +111,7 @@ export default class Jit {
       );
 
       console.log(`Initialized empty Jit repository in ${gitPath}`);
-      process.exit(0);
+      return;
     } catch (e) {
       throw new Error(`jit: failed to create folder ${e}`);
     }
