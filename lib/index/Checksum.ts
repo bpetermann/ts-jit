@@ -1,14 +1,15 @@
 import { createHash } from 'crypto';
-import * as fs from 'fs';
+import { readSync } from 'fs';
 
 export class EndOfFile extends Error {}
 export class InvalidChecksum extends Error {}
+
+const CHECKSUM = 20;
 
 export default class Checksum {
   private fd: number;
   private digest = createHash('sha1');
   private offset = 0;
-  static CHECKSUM_SIZE = 20;
 
   constructor(fd: number) {
     this.fd = fd;
@@ -16,7 +17,7 @@ export default class Checksum {
 
   read(size: number): Buffer {
     const buffer = Buffer.alloc(size);
-    const bytesRead = fs.readSync(this.fd, buffer, 0, size, this.offset);
+    const bytesRead = readSync(this.fd, buffer, 0, size, this.offset);
 
     if (bytesRead !== size) {
       throw new EndOfFile('Unexpected end-of-file while reading index');
@@ -29,16 +30,10 @@ export default class Checksum {
   }
 
   verifyChecksum(): void {
-    const buffer = Buffer.alloc(Checksum.CHECKSUM_SIZE);
-    const bytesRead = fs.readSync(
-      this.fd,
-      buffer,
-      0,
-      Checksum.CHECKSUM_SIZE,
-      this.offset
-    );
+    const buffer = Buffer.alloc(CHECKSUM);
+    const bytesRead = readSync(this.fd, buffer, 0, CHECKSUM, this.offset);
 
-    if (bytesRead !== Checksum.CHECKSUM_SIZE) {
+    if (bytesRead !== CHECKSUM) {
       throw new EndOfFile('Unexpected end-of-file while reading checksum');
     }
 
