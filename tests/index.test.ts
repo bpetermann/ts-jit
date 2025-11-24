@@ -37,4 +37,26 @@ describe('Index.ts', () => {
 
     expect(paths).toEqual(['alice.txt/nested.txt', 'bob.txt']);
   });
+
+  test('replaces a directory with a file', () => {
+    index.add('alice.txt', oid, stat);
+    index.add('nested/bob.txt', oid, stat);
+
+    index.add('nested', oid, stat);
+
+    const paths = index.eachEntry().map(getPath);
+
+    expect(paths).toEqual(['alice.txt', 'nested']);
+  });
+
+  test('recursively replaces a directory with a file', () => {
+    index.add('alice.txt', oid, stat);
+    index.add('nested/bob.txt', oid, stat);
+    index.add('nested/inner/claire.txt', oid, stat);
+
+    index.add('nested', oid, stat);
+
+    const paths = index.eachEntry().map(getPath);
+    expect(paths).toEqual(['alice.txt', 'nested']);
+  });
 });

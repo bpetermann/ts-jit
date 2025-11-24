@@ -12,6 +12,7 @@ const ENTRY_BLOCK = 8;
 export default class Index {
   public entries: Record<string, Entry> = {};
   private keys: Set<string> = new Set();
+  private parents: Record<string, Set<string>> = {};
   private changed: boolean = false;
 
   constructor(private readonly pathname: string) {
@@ -59,6 +60,11 @@ export default class Index {
   storeEntry(entry: Entry) {
     this.keys.add(entry.key);
     this.entries[entry.key] = entry;
+
+    entry.parentDirectories().forEach((dirname) => {
+      if (!this.parents[dirname]) this.parents[dirname] = new Set();
+      this.parents[dirname].add(entry.path);
+    });
   }
 
   readHeader(reader: Checksum): number {
@@ -112,6 +118,7 @@ export default class Index {
   private clear(): void {
     this.entries = {};
     this.keys = new Set();
+    this.parents = {};
     this.changed = false;
   }
 
@@ -124,9 +131,29 @@ export default class Index {
   }
 
   private discardConflicts(entry: Entry) {
-    entry.parentDirectories().forEach((dirname) => {
-      this.keys.delete(dirname);
-      delete this.entries[dirname];
+    entry.parentDirectories().forEach((parent) => this.removeEntry(parent));
+    this.removeChildren(entry.path);
+  }
+
+  private removeChildren(path: string): void {
+    Array.from(this.parents[path] ?? []).forEach((child) =>
+      this.removeEntry(child)
+    );
+  }
+
+  private removeEntry(pathname: string): void {
+    const entry = this.entries[pathname];
+    if (!entry) return;
+
+    this.keys.delete(pathname);
+    delete this.entries[pathname];
+
+    entry.parentDirectories().forEach((dir) => {
+      const set = this.parents[dir];
+      if (set) {
+        set.delete(entry.path);
+        if (set.size === 0) delete this.parents[dir];
+      }
     });
   }
 }
