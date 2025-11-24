@@ -1,4 +1,4 @@
-import fs from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 
 export default class Refs {
@@ -9,7 +9,7 @@ export default class Refs {
 
   updateHead(oid: string): void {
     try {
-      fs.writeFileSync(this.headPath, oid || '');
+      writeFileSync(this.headPath, oid || '');
     } catch (e) {
       throw new Error(
         `jit: failed to write ID in HEAD: ${
@@ -20,8 +20,8 @@ export default class Refs {
   }
 
   readHead(): NonSharedBuffer | undefined {
-    if (fs.existsSync(this.headPath)) {
-      return fs.readFileSync(this.headPath);
+    if (existsSync(this.headPath)) {
+      return readFileSync(this.headPath);
     }
   }
 }

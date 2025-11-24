@@ -1,4 +1,4 @@
-import fs from 'fs';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import Database from './Database.js';
 import Author from './database/Author.js';
@@ -21,23 +21,24 @@ export default class Jit {
   }
 
   main() {
+    const rootPath = process.cwd();
+
     switch (this.command) {
       case 'init':
         this.create(this.dir);
         break;
       case 'commit':
-        this.commit();
+        this.commit(rootPath, this.tmpMessage());
         break;
       case 'add':
-        this.add();
+        this.add(rootPath, this.args);
         break;
       default:
         throw new Error(`jit: ${this.command} is not a jit command.`);
     }
   }
 
-  private add() {
-    const rootPath = process.cwd();
+  add(rootPath: string, args?: string[]) {
     const gitPath = join(rootPath, '.git');
     const dbPath = join(gitPath, 'objects');
     const indexPath = join(gitPath, 'index');
@@ -48,10 +49,10 @@ export default class Jit {
 
     index.load();
 
-    this.args?.forEach((arg) => {
-      const path = resolve(arg);
+    args?.forEach((arg) => {
+      const path = resolve(rootPath, arg);
 
-      if (!fs.existsSync(path)) {
+      if (!existsSync(path)) {
         console.error(`Path not found: ${path}`);
         return;
       }
@@ -67,11 +68,9 @@ export default class Jit {
     });
 
     index.writeUpdates();
-    return;
   }
 
-  private commit() {
-    const rootPath = process.cwd();
+  commit(rootPath: string, message: string) {
     const gitPath = join(rootPath, '.git');
     const dbPath = join(gitPath, 'objects');
 
@@ -88,7 +87,6 @@ export default class Jit {
     const name = process.env.GIT_AUTHOR_NAME;
     const email = process.env.GIT_AUTHOR_EMAIL;
     const author = new Author(name, email, Math.floor(Date.now() / 1000));
-    const message = fs.readFileSync(0)?.toString();
 
     const commit = new Commit(parent, root.oid!, author, message);
     database.store(commit);
@@ -96,7 +94,6 @@ export default class Jit {
 
     const isRoot = !parent ? '(root-commit) ' : '';
     console.log(`[${isRoot}${root.oid}] ${message}`);
-    return;
   }
 
   create(dir?: string) {
@@ -105,7 +102,7 @@ export default class Jit {
 
     try {
       ['objects', 'refs'].forEach((dir) =>
-        fs.mkdirSync(join(gitPath, dir), {
+        mkdirSync(join(gitPath, dir), {
           recursive: true,
         })
       );
@@ -115,5 +112,9 @@ export default class Jit {
     } catch (e) {
       throw new Error(`jit: failed to create folder ${e}`);
     }
+  }
+
+  private tmpMessage(): string {
+    return readFileSync(0)?.toString();
   }
 }
