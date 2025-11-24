@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['lib/tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts'],
     clearMocks: true,
     isolate: true,
     testTimeout: 5000,
@@ -14,7 +14,7 @@ export default defineConfig({
       reporter: ['text', 'html'],
       include: ['src/**/*.{ts,tsx}'],
     },
-    setupFiles: ['lib/tests/setup.ts'],
+    setupFiles: ['tests/setup.ts'],
   },
 
   plugins: [tsconfigPaths()],
