@@ -20,6 +20,7 @@ export default class Index {
 
   add(pathname: string, oid: string, stat: Stats) {
     const entry = Entry.create(pathname, oid, stat);
+    this.discardConflicts(entry);
     this.storeEntry(entry);
     this.changed = true;
   }
@@ -120,5 +121,12 @@ export default class Index {
     } catch {
       return null;
     }
+  }
+
+  private discardConflicts(entry: Entry) {
+    entry.parentDirectories().forEach((dirname) => {
+      this.keys.delete(dirname);
+      delete this.entries[dirname];
+    });
   }
 }
