@@ -6,7 +6,7 @@ import { createTempRepo } from './helper.js';
 
 const getPath = ({ path }: Entry): string => path;
 
-describe('Index.ts', () => {
+describe('Index', () => {
   let root: string;
   let stat: Stats;
   let oid: string;
