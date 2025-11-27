@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { mkdirSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import Database from './Database.js';
 import Author from './database/Author.js';
@@ -49,22 +49,25 @@ export default class Jit {
 
     index.load();
 
-    args?.forEach((arg) => {
-      const path = resolve(rootPath, arg);
+    let paths: string[] = [];
 
-      if (!existsSync(path)) {
-        console.error(`Path not found: ${path}`);
-        return;
-      }
+    try {
+      paths =
+        args?.flatMap((arg) => {
+          const path = resolve(rootPath, arg);
+          return workspace.listFiles(path);
+        }) ?? [];
+    } catch (error) {
+      console.error(error.message);
+    }
 
-      workspace.listFiles(path)?.forEach((pathname) => {
-        const data = workspace.readFile(pathname);
-        const stat = workspace.statFile(pathname);
+    paths?.forEach((pathname) => {
+      const data = workspace.readFile(pathname);
+      const stat = workspace.statFile(pathname);
 
-        const blob = new Blob(data);
-        database.store(blob);
-        index.add(pathname, blob.oid, stat);
-      });
+      const blob = new Blob(data);
+      database.store(blob);
+      index.add(pathname, blob.oid, stat);
     });
 
     index.writeUpdates();

@@ -1,5 +1,15 @@
-import fs from 'fs';
+import {
+  accessSync,
+  constants,
+  existsSync,
+  readdirSync,
+  readFileSync,
+  Stats,
+  statSync,
+} from 'fs';
 import { join, relative } from 'path';
+
+export class MissingFile extends Error {}
 
 export default class Workspace {
   private readonly IGNORE = ['.git'];
@@ -7,33 +17,33 @@ export default class Workspace {
   constructor(private readonly rootPath: string) {}
 
   listFiles(path: string = this.rootPath): string[] {
-    if (fs.statSync(path).isDirectory()) {
-      return fs
-        .readdirSync(path, { withFileTypes: true })
-        .filter((entry) => !this.IGNORE.includes(entry.name))
-        .flatMap((entry) => {
-          const fullPath = join(path, entry.name);
-          return entry.isDirectory()
-            ? this.listFiles(fullPath)
-            : [relative(this.rootPath, fullPath)];
-        });
+    const relativePath = relative(this.rootPath, path);
+
+    if (!existsSync(path)) {
+      throw new MissingFile(`pathspec ${relativePath} did not match any files`);
     }
 
-    return [relative(this.rootPath, path)];
+    if (statSync(path).isDirectory()) {
+      return readdirSync(path, { withFileTypes: true })
+        .filter((entry) => !this.IGNORE.includes(entry.name))
+        .flatMap((entry) => this.listFiles(join(path, entry.name)));
+    } else {
+      return [relativePath];
+    }
   }
 
   readFile(file: string): NonSharedBuffer {
-    return fs.readFileSync(join(this.rootPath, file));
+    return readFileSync(join(this.rootPath, file));
   }
 
-  statFile(filePath: string): fs.Stats {
+  statFile(filePath: string): Stats {
     const fullPath = join(this.rootPath, filePath);
-    return fs.statSync(fullPath);
+    return statSync(fullPath);
   }
 
   isExecutable(path: string) {
     try {
-      fs.accessSync(path, fs.constants.X_OK);
+      accessSync(path, constants.X_OK);
       return true;
     } catch {
       return false;
