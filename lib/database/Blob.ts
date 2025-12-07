@@ -1,4 +1,4 @@
-import { JitObject } from 'lib/utils/JitObject.js';
+import { JitObject } from 'lib/types/JitObject.js';
 
 export default class Blob implements JitObject {
   private _oid: string | undefined;

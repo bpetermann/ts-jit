@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import JitEntry from 'lib/utils/JitEntry.js';
+import JitEntry from 'lib/types/JitEntry.js';
 import pathModule from 'path';
 
 const REGULAR_MODE = 0o100644;

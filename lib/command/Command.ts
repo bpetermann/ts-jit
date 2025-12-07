@@ -1,3 +1,4 @@
+import { JitCommand } from 'lib/types/JitCommand.js';
 import Add from './Add.js';
 import Base, { CommandContext } from './Base.js';
 import Commit from './Commit.js';
@@ -5,20 +6,20 @@ import Init from './Init.js';
 
 export default class Command {
   private readonly commands: Record<
-    string,
+    JitCommand,
     new (args: CommandContext) => Base
   > = {
-    add: Add,
-    init: Init,
-    commit: Commit,
+    [JitCommand.Add]: Add,
+    [JitCommand.Init]: Init,
+    [JitCommand.Commit]: Commit,
   };
 
-  dispatch(name: string, targetDir: string, args?: string[]) {
+  dispatch(name: JitCommand, targetDir: string, root: string, args?: string[]) {
     if (!this.commands[name]) throw new Error(`${name} is not a jit command.`);
 
     const ctx: CommandContext = {
-      root: process.cwd(),
-      ...(name === 'init' ? { targetDir } : { args }),
+      root,
+      ...(name === JitCommand.Init ? { targetDir } : { args }),
     };
 
     const commandClass = this.commands[name];

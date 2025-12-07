@@ -1,5 +1,5 @@
 import path from 'path';
-import JitEntry from './utils/JitEntry.js';
+import JitEntry from './types/JitEntry.js';
 
 /**
  * @deprecated This class is deprecated in favor of `lib/index/Entry.ts`.

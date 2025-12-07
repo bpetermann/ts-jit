@@ -1,4 +1,4 @@
-import { JitObject } from 'lib/utils/JitObject.js';
+import { JitObject } from 'lib/types/JitObject.js';
 import Author from './Author.js';
 
 export default class Commit implements JitObject {

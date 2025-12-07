@@ -1,5 +1,5 @@
-import JitEntry from 'lib/utils/JitEntry.js';
-import { JitObject } from '../utils/JitObject.js';
+import JitEntry from 'lib/types/JitEntry.js';
+import { JitObject } from '../types/JitObject.js';
 
 type TreeEntry = JitEntry | Tree;
 
