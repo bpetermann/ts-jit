@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
+import { exit } from 'process';
 import Database from './Database.js';
 import Author from './database/Author.js';
 import Blob from './database/Blob.js';
