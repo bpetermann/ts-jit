@@ -13,12 +13,12 @@ export default class Command {
     commit: Commit,
   };
 
-  dispatch(name: string, dir: string, args?: string[]) {
+  dispatch(name: string, targetDir: string, args?: string[]) {
     if (!this.commands[name]) throw new Error(`${name} is not a jit command.`);
 
     const ctx: CommandContext = {
-      rootPath: process.cwd(),
-      ...(name === 'init' ? { targetDir: dir } : { args }),
+      root: process.cwd(),
+      ...(name === 'init' ? { targetDir } : { args }),
     };
 
     const commandClass = this.commands[name];

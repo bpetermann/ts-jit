@@ -6,8 +6,8 @@ import Base from './Base.js';
 
 export default class Add extends Base {
   override run() {
-    const { rootPath, args } = this.context;
-    const repo = new Repository(rootPath);
+    const { root, args } = this.context;
+    const repo = new Repository(root);
 
     repo.index.load();
 
@@ -16,7 +16,7 @@ export default class Add extends Base {
     try {
       paths =
         args?.flatMap((arg) => {
-          const path = resolve(rootPath, arg);
+          const path = resolve(root, arg);
           return repo.workspace.listFiles(path);
         }) ?? [];
     } catch (error) {

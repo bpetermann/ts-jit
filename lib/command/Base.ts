@@ -1,5 +1,5 @@
 export interface CommandContext {
-  rootPath: string;
+  root: string;
   targetDir?: string;
   args?: string[];
   message?: string;

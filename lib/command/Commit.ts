@@ -7,10 +7,9 @@ import Base from './Base.js';
 
 export default class Commit extends Base {
   override run() {
-    const { rootPath } = this.context;
     const message = this.context.message ?? this.readMessageFromStdin();
 
-    const repo = new Repository(rootPath);
+    const repo = new Repository(this.context.root);
 
     repo.index.load();
 
