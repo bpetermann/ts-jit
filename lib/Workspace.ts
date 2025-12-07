@@ -10,6 +10,7 @@ import {
 import { join, relative } from 'path';
 
 export class MissingFile extends Error {}
+export class NoPermission extends Error {}
 
 export default class Workspace {
   private readonly IGNORE = ['.git'];
@@ -33,12 +34,21 @@ export default class Workspace {
   }
 
   readFile(file: string): NonSharedBuffer {
-    return readFileSync(join(this.rootPath, file));
+    try {
+      return readFileSync(join(this.rootPath, file));
+    } catch {
+      throw new NoPermission(`open(${file}): Permission denied`);
+    }
   }
 
   statFile(filePath: string): Stats {
     const fullPath = join(this.rootPath, filePath);
-    return statSync(fullPath);
+
+    try {
+      return statSync(fullPath);
+    } catch {
+      throw new NoPermission(`open(${filePath}): Permission denied`);
+    }
   }
 
   isExecutable(path: string) {

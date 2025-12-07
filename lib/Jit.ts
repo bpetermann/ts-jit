@@ -58,10 +58,11 @@ export default class Jit {
           return workspace.listFiles(path);
         }) ?? [];
     } catch (error) {
-      console.error(error.message);
+      console.error(error?.message);
     }
 
-    paths?.forEach((pathname) => {
+    try {
+      paths.forEach((pathname) => {
       const data = workspace.readFile(pathname);
       const stat = workspace.statFile(pathname);
 
@@ -69,7 +70,11 @@ export default class Jit {
       database.store(blob);
       index.add(pathname, blob.oid, stat);
     });
-
+    } catch (error) {
+      console.error('error:', error?.message);
+      console.error('fatal: adding files failed');
+      exit(128);
+    }
     index.writeUpdates();
   }
 

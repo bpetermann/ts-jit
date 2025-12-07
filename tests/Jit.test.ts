@@ -1,8 +1,16 @@
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import Jit from 'lib/Jit.js';
 import { join } from 'path';
 import { describe, expect, test, vi } from 'vitest';
 import { createTempRepo } from './helper.js';
+
+const FILE_NAME = 'foo.txt' as const;
+
+vi.mock('node:process', () => ({
+  exit: vi.fn(),
+  argv: process.argv,
+  env: process.env,
+}));
 
 describe('Jit', () => {
   test('init creates .git folder', () => {
@@ -16,18 +24,18 @@ describe('Jit', () => {
 
   test('adds a single file', () => {
     const { root } = createTempRepo();
-    writeFileSync(join(root, 'foo.txt'), 'hello');
+    writeFileSync(join(root, FILE_NAME), 'hello');
 
     const jit = new Jit();
     jit.create(root);
-    jit.add(root, ['foo.txt']);
+    jit.add(root, [FILE_NAME]);
 
     expect(existsSync(join(root, '.git', 'objects'))).toBe(true);
   });
 
   test('creates a commit', () => {
     const { root } = createTempRepo();
-    writeFileSync(join(root, 'foo.txt'), 'hello');
+    writeFileSync(join(root, FILE_NAME), 'hello');
 
     const jit = new Jit();
     jit.create(root);
@@ -36,18 +44,20 @@ describe('Jit', () => {
     expect(existsSync(join(root, '.git', 'HEAD'))).toBe(true);
   });
 
-  test('fails on a non-existing file', () => {
+  test('fails on a unreadable file', () => {
     const { root } = createTempRepo();
+    writeFileSync(join(root, FILE_NAME), 'hello');
+    chmodSync(join(root, FILE_NAME), 0o000);
 
     const jit = new Jit();
     jit.create(root);
 
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    jit.add(root, ['foo.txt']);
+    jit.add(root, [FILE_NAME]);
 
     expect(spy).toHaveBeenCalledWith(
-      expect.stringMatching(/did not match any files/i)
+      expect.stringMatching(/adding files failed/i)
     );
 
     spy.mockRestore();
@@ -56,7 +66,7 @@ describe('Jit', () => {
   test('adds multiple files', () => {
     const { root } = createTempRepo();
 
-    writeFileSync(join(root, 'foo.txt'), 'hello');
+    writeFileSync(join(root, FILE_NAME), 'hello');
     writeFileSync(join(root, 'bar.txt'), 'world');
 
     mkdirSync(join(root, 'nested'));
