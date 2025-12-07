@@ -95,6 +95,14 @@ git cat-file -p HEAD
 
 ```
 
+## 🧪 Tests
+
+The following command executes all Vitest test suites
+
+```js
+npm run test
+```
+
 ## 🧭 Status
 
 | Component               | Status | Notes                                                 |
@@ -104,5 +112,9 @@ git cat-file -p HEAD
 
 ## 📚 References
 
-- Building Git by James Coglan
+- Building Git by [James Coglan](https://shop.jcoglan.com/building-git/)
 - Git source code and documentation
+
+
+## 🔖 Bookmark
+➜ Page: 128
