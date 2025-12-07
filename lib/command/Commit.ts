@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import Repository from 'lib/Repository.js';
+import Repository from '../Repository.js';
 import Author from '../database/Author.js';
 import CommitData from '../database/Commit.js';
 import Tree from '../database/Tree.js';
