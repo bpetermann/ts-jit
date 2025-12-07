@@ -1,6 +1,7 @@
 import { resolve } from 'path';
-import { exit } from 'process';
 import Blob from '../database/Blob.js';
+
+import { ExitError } from '../errors/index.js';
 import Repository from '../Repository.js';
 import Base from './Base.js';
 
@@ -11,18 +12,31 @@ export default class Add extends Base {
 
     repo.index.load();
 
-    let paths: string[] = [];
+    const paths = this.getPaths(args, repo, root);
 
+    this.addPaths(paths, repo);
+
+    repo.index.writeUpdates();
+  }
+
+  private getPaths(
+    args: string[] | undefined,
+    repo: Repository,
+    root: string
+  ): string[] {
     try {
-      paths =
+      return (
         args?.flatMap((arg) => {
           const path = resolve(root, arg);
           return repo.workspace.listFiles(path);
-        }) ?? [];
-    } catch (error) {
-      console.error(error?.message);
+        }) ?? []
+      );
+    } catch (err) {
+      throw new Error(`fatal: ${err instanceof Error ? err.message : ''}`);
     }
+  }
 
+  private addPaths(paths: string[], repo: Repository) {
     try {
       paths.forEach((pathname) => {
         const data = repo.workspace.readFile(pathname);
@@ -33,11 +47,10 @@ export default class Add extends Base {
         repo.index.add(pathname, blob.oid, stat);
       });
     } catch (error) {
-      console.error('error:', error?.message);
-      console.error('fatal: adding files failed');
-      exit(128);
+      throw new ExitError(
+        `error: ${error?.message}\nfatal: adding files failed`,
+        128
+      );
     }
-
-    repo.index.writeUpdates();
   }
 }
