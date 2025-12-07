@@ -8,9 +8,7 @@ import {
   statSync,
 } from 'fs';
 import { join, relative } from 'path';
-
-export class MissingFile extends Error {}
-export class NoPermission extends Error {}
+import { MissingFile, NoPermission } from './errors/index.js';
 
 export default class Workspace {
   private readonly IGNORE = ['.git'];

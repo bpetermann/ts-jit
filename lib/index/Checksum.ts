@@ -1,8 +1,6 @@
 import { createHash } from 'crypto';
 import { readSync } from 'fs';
-
-export class EndOfFile extends Error {}
-export class InvalidChecksum extends Error {}
+import { EndOfFile, InvalidChecksum } from '../errors/index.js';
 
 const CHECKSUM = 20;
 
