@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'fs';
 import Index from 'lib/Index.js';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 
 const cleanupFns: Array<() => void> = [];
 
@@ -23,4 +23,15 @@ export function assertIndex(file: string, expected: string[]) {
   index.load();
   const filesInIndex = index.eachEntry().map((entry) => entry.path);
   expect(filesInIndex).toEqual(expect.arrayContaining(expected));
+}
+
+export function createConsoleLogSpy() {
+  const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  cleanupFns.push(() => spy.mockRestore());
+  return {
+    spy,
+    get calls() {
+      return spy.mock.calls.map((call) => call[0]);
+    },
+  };
 }
