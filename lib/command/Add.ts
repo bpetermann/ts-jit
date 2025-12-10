@@ -8,15 +8,14 @@ import Base from './Base.js';
 export default class Add extends Base {
   override run() {
     const { root, args } = this.context;
-    const repo = new Repository(root);
 
-    repo.index.load();
+    this.repo.index.load();
 
-    const paths = this.getPaths(args, repo, root);
+    const paths = this.getPaths(args, this.repo, root);
 
-    this.addPaths(paths, repo);
+    this.addPaths(paths, this.repo);
 
-    repo.index.writeUpdates();
+    this.repo.index.writeUpdates();
   }
 
   private getPaths(

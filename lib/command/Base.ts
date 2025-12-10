@@ -1,3 +1,5 @@
+import Repository from 'lib/Repository.js';
+
 export interface CommandContext {
   root: string;
   targetDir?: string;
@@ -6,7 +8,11 @@ export interface CommandContext {
 }
 
 export default class Base {
-  constructor(protected readonly context: CommandContext) {}
+  repo: Repository;
+
+  constructor(protected readonly context: CommandContext) {
+    this.repo = new Repository(this.context.root);
+  }
 
   run() {
     throw new Error('Method not implemented');
