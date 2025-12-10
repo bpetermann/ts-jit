@@ -3,6 +3,7 @@ import Add from './Add.js';
 import Base, { CommandContext } from './Base.js';
 import Commit from './Commit.js';
 import Init from './Init.js';
+import Status from './Status.js';
 
 type JitClass = new (args: CommandContext) => Base;
 
@@ -11,6 +12,7 @@ export default class Command {
     [JitCommand.Add]: Add,
     [JitCommand.Init]: Init,
     [JitCommand.Commit]: Commit,
+    [JitCommand.Status]: Status,
   };
 
   dispatch(name: JitCommand, ctx: CommandContext) {
