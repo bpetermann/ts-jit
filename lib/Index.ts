@@ -26,6 +26,10 @@ export default class Index {
     this.changed = true;
   }
 
+  tracked(path: string): boolean {
+    return this.keys.has(path) || !!this.parents[path];
+  }
+
   eachEntry(): Array<Entry> {
     return Array.from(this.keys)
       .sort((a, b) => a.localeCompare(b))

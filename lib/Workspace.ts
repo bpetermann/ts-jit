@@ -31,6 +31,29 @@ export default class Workspace {
     }
   }
 
+  listDir(dirname: string = ''): Record<string, Stats> {
+    const path = join(this.rootPath, dirname);
+
+    if (!existsSync(path)) {
+      const relativePath = relative(this.rootPath, path);
+      throw new MissingFile(`pathspec ${relativePath} did not match any files`);
+    }
+
+    const entries = readdirSync(path, { withFileTypes: true }).filter(
+      (entry) => !this.IGNORE.includes(entry.name)
+    );
+
+    const stats: Record<string, Stats> = {};
+
+    for (const entry of entries) {
+      const fullPath = join(path, entry.name);
+      const rel = relative(this.rootPath, fullPath);
+      stats[rel] = statSync(fullPath);
+    }
+
+    return stats;
+  }
+
   readFile(file: string): NonSharedBuffer {
     try {
       return readFileSync(join(this.rootPath, file));

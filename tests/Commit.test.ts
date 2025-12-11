@@ -22,7 +22,6 @@ describe('Commit', () => {
 
     new Init({ root }).run();
     new Add({ root, args: [FILE_NAME] }).run();
-
     new Commit({ root, message: 'first commit' }).run();
 
     expect(existsSync(join(root, '.git', 'HEAD'))).toBe(true);
