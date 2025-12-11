@@ -1,5 +1,10 @@
 import { mkdtempSync, rmSync } from 'fs';
+import Add from 'lib/command/Add.js';
+import Base, { CommandContext } from 'lib/command/Base.js';
+import Commit from 'lib/command/Commit.js';
+import Init from 'lib/command/Init.js';
 import Index from 'lib/Index.js';
+import { JitCommand } from 'lib/types/JitCommand.js';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { expect, vi } from 'vitest';
@@ -34,4 +39,29 @@ export function createConsoleLogSpy() {
       return spy.mock.calls.map((call) => call[0]);
     },
   };
+}
+
+export function commandRunner(
+  cmd: JitCommand.Init,
+  ctx: Omit<CommandContext, 'message' | 'args'>
+): void;
+
+export function commandRunner(
+  cmd: JitCommand.Add,
+  ctx: Omit<CommandContext, 'message'>
+): void;
+
+export function commandRunner(
+  cmd: JitCommand.Commit,
+  ctx: Required<CommandContext>
+): void;
+
+export function commandRunner(cmd: JitCommand, ctx: CommandContext): void {
+  const chain: Record<JitCommand, Array<new (args: CommandContext) => Base>> = {
+    [JitCommand.Init]: [Init],
+    [JitCommand.Add]: [Init, Add],
+    [JitCommand.Commit]: [Init, Add, Commit],
+    [JitCommand.Status]: [],
+  };
+  for (const Step of chain[cmd]) new Step(ctx).run();
 }
