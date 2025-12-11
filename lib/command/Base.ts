@@ -1,4 +1,4 @@
-import Repository from 'lib/Repository.js';
+import Repository from '../Repository.js';
 
 export interface CommandContext {
   root: string;
