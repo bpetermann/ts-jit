@@ -53,9 +53,13 @@ describe('Status', () => {
   it('lists untracked directories, not their contents', () => {
     const { root } = createTempRepo();
     writeFileSync(join(root, file1), '');
-    mkdirSync(join(root, `dir/${file2}`), { recursive: true });
+    mkdirSync(join(root, `dir`), { recursive: true });
+    writeFileSync(join(root, `dir/${file2}`), '');
 
-    new Init({ targetDir: root, root }).run();
+    commandRunner(JitCommand.Init, {
+      targetDir: root,
+      root,
+    });
 
     const logger = createConsoleLogSpy();
 
@@ -88,5 +92,34 @@ describe('Status', () => {
     new Status(ctx).run();
 
     expect(logger.calls).toEqual([`?? a/b/c/`, `?? a/outer.txt`]);
+  });
+
+  it('does not list empty untracked directories', () => {
+    const { root } = createTempRepo();
+
+    mkdirSync(join(root, `outer`));
+
+    new Init({ targetDir: root, root }).run();
+
+    const logger = createConsoleLogSpy();
+
+    new Status({ targetDir: root, root }).run();
+
+    expect(logger.calls).toEqual([]);
+  });
+
+  it('lists untracked directories that indirectly contain files', () => {
+    const { root } = createTempRepo();
+
+    mkdirSync(join(root, 'outer/inner'), { recursive: true });
+    writeFileSync(join(root, 'outer/inner/file.txt'), '');
+
+    new Init({ targetDir: root, root }).run();
+
+    const logger = createConsoleLogSpy();
+
+    new Status({ targetDir: root, root }).run();
+
+    expect(logger.calls).toEqual([`?? outer/`]);
   });
 });
