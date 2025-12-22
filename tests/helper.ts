@@ -6,15 +6,23 @@ import Init from 'lib/command/Init.js';
 import Index from 'lib/Index.js';
 import { JitCommand } from 'lib/types/JitCommand.js';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { expect, vi } from 'vitest';
 
 const cleanupFns: Array<() => void> = [];
 
-export function createTempRepo() {
+interface TempRepoConfig {
+  cleanup?: boolean;
+}
+
+export function createTempRepo(
+  { cleanup }: TempRepoConfig = { cleanup: true }
+) {
   const root = mkdtempSync(join(tmpdir(), 'jit-test-'));
   const gitIndex = join(root, '.git', 'index');
+  if (cleanup) {
   cleanupFns.push(() => rmSync(root, { recursive: true, force: true }));
+  }
   return { root, gitIndex };
 }
 
