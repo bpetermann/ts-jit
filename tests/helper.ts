@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import Add from 'lib/command/Add.js';
 import Base, { CommandContext } from 'lib/command/Base.js';
 import Commit from 'lib/command/Commit.js';
@@ -21,7 +21,7 @@ export function createTempRepo(
   const root = mkdtempSync(join(tmpdir(), 'jit-test-'));
   const gitIndex = join(root, '.git', 'index');
   if (cleanup) {
-  cleanupFns.push(() => rmSync(root, { recursive: true, force: true }));
+    cleanupFns.push(() => rmSync(root, { recursive: true, force: true }));
   }
   return { root, gitIndex };
 }
@@ -72,4 +72,31 @@ export function commandRunner(cmd: JitCommand, ctx: CommandContext): void {
     [JitCommand.Status]: [],
   };
   for (const Step of chain[cmd]) new Step(ctx).run();
+}
+
+export function createRepoWithCommit(
+  files: Record<string, string>,
+  config?: TempRepoConfig
+) {
+  const { root } = createTempRepo(config);
+
+  commandRunner(JitCommand.Init, {
+    targetDir: root,
+    root,
+  });
+
+  for (const [path, content] of Object.entries(files)) {
+    const fullPath = join(root, path);
+    mkdirSync(dirname(fullPath), { recursive: true });
+    writeFileSync(fullPath, content);
+  }
+
+  commandRunner(JitCommand.Commit, {
+    targetDir: root,
+    args: ['.'],
+    root,
+    message: 'commit message',
+  });
+
+  return root;
 }
