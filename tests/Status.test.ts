@@ -3,10 +3,11 @@ import Init from 'lib/command/Init.js';
 import Status from 'lib/command/Status.js';
 import { JitCommand } from 'lib/types/JitCommand.js';
 import { join } from 'path';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   commandRunner,
   createConsoleLogSpy,
+  createRepoWithCommit,
   createTempRepo,
 } from './helper.js';
 
@@ -121,5 +122,36 @@ describe('Status', () => {
     new Status({ targetDir: root, root }).run();
 
     expect(logger.calls).toEqual([`?? outer/`]);
+  });
+});
+
+describe('Status', () => {
+  let rootPath: string;
+
+  beforeEach(() => {
+    rootPath = createRepoWithCommit({
+      '1.txt': 'one',
+      'a/2.txt': 'two',
+      'a/b/3.txt': 'three',
+    });
+  });
+
+  it('prints nothing when no files are changed', () => {
+    const logger = createConsoleLogSpy();
+
+    new Status({ root: rootPath }).run();
+
+    expect(logger.calls).toEqual([]);
+  });
+
+  it('reports files with modified contents', () => {
+    writeFileSync(join(rootPath, '1.txt'), 'changed');
+    writeFileSync(join(rootPath, 'a/2.txt'), 'modified');
+
+    const logger = createConsoleLogSpy();
+
+    new Status({ root: rootPath }).run();
+
+    expect(logger.calls).toEqual([' M 1.txt', ' M a/2.txt']);
   });
 });

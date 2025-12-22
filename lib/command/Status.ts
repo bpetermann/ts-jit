@@ -1,14 +1,19 @@
+import Entry from 'lib/index/Entry.js';
 import { Stats } from 'node:fs';
 import Base from './Base.js';
 
 export default class Status extends Base {
+  stats: Record<string, Stats> = {};
+  changed: string[] = [];
   untracked: string[] = [];
 
   override run() {
     this.repo.index.load();
 
     this.scanWorkspace();
+    this.detectWorkspaceChanges();
 
+    this.changed.forEach((file) => console.log(` M ${file}`));
     this.untracked.forEach((file) => console.log(`?? ${file}`));
   }
 
@@ -17,15 +22,26 @@ export default class Status extends Base {
 
     for (const [path, stat] of Object.entries(entries)) {
       if (this.repo.index.tracked(path)) {
-        if (stat.isDirectory()) {
-          this.scanWorkspace(path);
-        }
+        if (stat.isFile()) this.stats[path] = stat;
+        if (stat.isDirectory()) this.scanWorkspace(path);
       } else if (this.trackableFile(path, stat)) {
         const displayPath = stat.isDirectory() ? `${path}/` : path;
         this.untracked.push(displayPath);
       }
     }
   }
+
+  private detectWorkspaceChanges(): void {
+    this.repo.index.eachEntry().forEach(this.checkIndexEntry);
+  }
+
+  private checkIndexEntry = (entry: Entry): void => {
+    const stat = this.stats[entry.path];
+
+    if (stat && !entry.statMatch(stat)) {
+      this.changed.push(entry.path);
+    }
+  };
 
   private trackableFile(path: string, stat: Stats): boolean {
     if (!stat) return false;

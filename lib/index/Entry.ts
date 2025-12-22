@@ -153,4 +153,8 @@ export default class Entry implements JitEntry {
     }
     return result;
   }
+
+  statMatch(stat: fs.Stats): boolean {
+    return this.size === 0 || this.size === stat.size;
+  }
 }
