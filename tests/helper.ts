@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'fs';
 import Add from 'lib/command/Add.js';
 import Base, { CommandContext } from 'lib/command/Base.js';
 import Commit from 'lib/command/Commit.js';
@@ -99,4 +99,14 @@ export function createRepoWithCommit(
   });
 
   return root;
+}
+
+export function touchSync(filePath: string) {
+  const now = new Date();
+
+  try {
+    utimesSync(filePath, now, now);
+  } catch {
+    writeFileSync(filePath, '');
+  }
 }

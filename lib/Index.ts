@@ -160,4 +160,9 @@ export default class Index {
       }
     });
   }
+
+  updateEntryStat(entry: Entry, stat: Stats): void {
+    entry.updateStat(stat);
+    this.changed = true;
+  }
 }

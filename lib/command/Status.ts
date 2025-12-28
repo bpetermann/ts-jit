@@ -14,6 +14,8 @@ export default class Status extends Base {
     this.scanWorkspace();
     this.detectWorkspaceChanges();
 
+    this.repo.index.writeUpdates();
+
     this.changed.forEach((file) => console.log(` M ${file}`));
     this.untracked.forEach((file) => console.log(`?? ${file}`));
   }
@@ -44,11 +46,15 @@ export default class Status extends Base {
       return;
     }
 
+    if (entry.timesMatch(stat)) return;
+
     const data = this.repo.workspace.readFile(entry.path);
     const blob = new Blob(data);
     const oid = this.repo.database.hashObject(blob);
 
-    if (entry.oid !== oid) {
+    if (entry.oid === oid) {
+      this.repo.index.updateEntryStat(entry, stat);
+    } else {
       this.changed.push(entry.path);
     }
   };

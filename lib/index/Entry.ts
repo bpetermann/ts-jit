@@ -164,4 +164,31 @@ export default class Entry implements JitEntry {
   static modeForStat(stat: fs.Stats): number {
     return (stat.mode & 0o111) !== 0 ? EXECUTABLE_MODE : REGULAR_MODE;
   }
+
+  timesMatch(stat: fs.Stats): boolean {
+    const statCtimeSec = Math.floor(stat.ctime.getTime() / 1000);
+    const statCtimeNsec = Math.floor((stat.ctimeMs % 1000) * 1_000_000);
+    const statMtimeSec = Math.floor(stat.mtime.getTime() / 1000);
+    const statMtimeNsec = Math.floor((stat.mtimeMs % 1000) * 1_000_000);
+
+    return (
+      this.ctime === statCtimeSec &&
+      this.ctime_nsec === statCtimeNsec &&
+      this.mtime === statMtimeSec &&
+      this.mtime_nsec === statMtimeNsec
+    );
+  }
+
+  updateStat(stat: fs.Stats): void {
+    this.ctime = Math.floor(stat.ctime.getTime() / 1000);
+    this.ctime_nsec = Math.floor((stat.ctimeMs % 1000) * 1_000_000);
+    this.mtime = Math.floor(stat.mtime.getTime() / 1000);
+    this.mtime_nsec = Math.floor((stat.mtimeMs % 1000) * 1_000_000);
+    this.dev = stat.dev;
+    this.ino = stat.ino;
+    this.mode = Entry.modeForStat(stat);
+    this.uid = stat.uid;
+    this.gid = stat.gid;
+    this.size = stat.size;
+  }
 }

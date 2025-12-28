@@ -9,6 +9,7 @@ import {
   createConsoleLogSpy,
   createRepoWithCommit,
   createTempRepo,
+  touchSync,
 } from './helper.js';
 
 const file1 = 'file.txt';
@@ -173,5 +174,15 @@ describe('Status', () => {
     new Status({ root: rootPath }).run();
 
     expect(logger.calls).toEqual([' M a/b/3.txt']);
+  });
+
+  it('prints nothing if a file is touched', () => {
+    touchSync(join(rootPath, '1.txt'));
+
+    const logger = createConsoleLogSpy();
+
+    new Status({ root: rootPath }).run();
+
+    expect(logger.calls).toEqual([]);
   });
 });
