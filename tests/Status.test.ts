@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'fs';
+import { chmodSync, mkdirSync, writeFileSync } from 'fs';
 import Init from 'lib/command/Init.js';
 import Status from 'lib/command/Status.js';
 import { JitCommand } from 'lib/types/JitCommand.js';
@@ -153,5 +153,15 @@ describe('Status', () => {
     new Status({ root: rootPath }).run();
 
     expect(logger.calls).toEqual([' M 1.txt', ' M a/2.txt']);
+  });
+
+  it('reports files with changed modes', () => {
+    chmodSync(join(rootPath, 'a/2.txt'), 0o755);
+
+    const logger = createConsoleLogSpy();
+
+    new Status({ root: rootPath }).run();
+
+    expect(logger.calls).toEqual([' M a/2.txt']);
   });
 });
