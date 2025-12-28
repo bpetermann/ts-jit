@@ -13,17 +13,9 @@ export default class Database {
   constructor(private readonly path: string) {}
 
   store(object: Blob | Tree | Commit) {
-    const contentBuffer = this.getBuffer(object);
-
-    const header = Buffer.from(
-      `${object.type()} ${contentBuffer.length}\0`,
-      'utf8'
-    );
-
-    const storeBuffer = Buffer.concat([header, contentBuffer]);
-
-    object.oid = crypto.createHash('sha1').update(storeBuffer).digest('hex');
-    this.writeObject(object.oid, storeBuffer);
+    const content = this.serializeObject(object);
+    object.oid = this.hashContent(content);
+    this.writeObject(object.oid, content);
   }
 
   private writeObject(oid: string, storeBuffer: Buffer): void {
@@ -49,6 +41,25 @@ export default class Database {
     return object instanceof Tree
       ? object.toBuffer()
       : Buffer.from(object.toString(), 'utf8');
+  }
+
+  hashObject(object: Blob): string {
+    return this.hashContent(this.serializeObject(object));
+  }
+
+  private serializeObject(object: Blob | Tree | Commit): Buffer<ArrayBuffer> {
+    const contentBuffer = this.getBuffer(object);
+
+    const header = Buffer.from(
+      `${object.type()} ${contentBuffer.length}\0`,
+      'utf8'
+    );
+
+    return Buffer.concat([header, contentBuffer]);
+  }
+
+  private hashContent(buffer: Buffer<ArrayBuffer>): string {
+    return crypto.createHash('sha1').update(buffer).digest('hex');
   }
 
   generateTempName() {

@@ -1,5 +1,6 @@
-import Entry from 'lib/index/Entry.js';
 import { Stats } from 'node:fs';
+import Blob from '../database/Blob.js';
+import Entry from '../index/Entry.js';
 import Base from './Base.js';
 
 export default class Status extends Base {
@@ -39,6 +40,15 @@ export default class Status extends Base {
     const stat = this.stats[entry.path];
 
     if (stat && !entry.statMatch(stat)) {
+      this.changed.push(entry.path);
+      return;
+    }
+
+    const data = this.repo.workspace.readFile(entry.path);
+    const blob = new Blob(data);
+    const oid = this.repo.database.hashObject(blob);
+
+    if (entry.oid !== oid) {
       this.changed.push(entry.path);
     }
   };
