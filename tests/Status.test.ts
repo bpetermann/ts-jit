@@ -164,4 +164,14 @@ describe('Status', () => {
 
     expect(logger.calls).toEqual([' M a/2.txt']);
   });
+
+  it('reports modified files with unchanged size', () => {
+    writeFileSync(join(rootPath, 'a/b/3.txt'), 'hello');
+
+    const logger = createConsoleLogSpy();
+
+    new Status({ root: rootPath }).run();
+
+    expect(logger.calls).toEqual([' M a/b/3.txt']);
+  });
 });
