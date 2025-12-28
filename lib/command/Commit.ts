@@ -27,6 +27,9 @@ export default class Commit extends Base {
   }
 
   private readMessageFromStdin(): string {
-    return readFileSync(0)?.toString();
+    if (process.stdin.isTTY) throw new Error('No commit message provided');
+    const input = readFileSync(0).toString().trim();
+    if (!input) throw new Error('No commit message provided');
+    return input;
   }
 }
