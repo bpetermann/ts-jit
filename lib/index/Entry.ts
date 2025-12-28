@@ -26,7 +26,7 @@ export default class Entry implements JitEntry {
 
   static create(pathname: string, oid: string, stat: fs.Stats) {
     const path = pathname.toString();
-    const mode = (stat.mode & 0o111) !== 0 ? EXECUTABLE_MODE : REGULAR_MODE;
+    const mode = Entry.modeForStat(stat);
     const flags = Math.min(Buffer.byteLength(path), MAX_PATH_SIZE);
 
     return new Entry(
@@ -155,6 +155,13 @@ export default class Entry implements JitEntry {
   }
 
   statMatch(stat: fs.Stats): boolean {
-    return this.size === 0 || this.size === stat.size;
+    return (
+      this.mode === Entry.modeForStat(stat) &&
+      (this.size === 0 || this.size === stat.size)
+    );
+  }
+
+  static modeForStat(stat: fs.Stats): number {
+    return (stat.mode & 0o111) !== 0 ? EXECUTABLE_MODE : REGULAR_MODE;
   }
 }
