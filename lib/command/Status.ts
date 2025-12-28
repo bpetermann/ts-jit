@@ -3,9 +3,13 @@ import Blob from '../database/Blob.js';
 import Entry from '../index/Entry.js';
 import Base from './Base.js';
 
+const DELETED = ':workspace_deleted' as const;
+const MODIFIED = ':workspace_modified' as const;
+
 export default class Status extends Base {
   stats: Record<string, Stats> = {};
   changed: string[] = [];
+  changes: Map<string, Set<string>> = new Map();
   untracked: string[] = [];
 
   override run() {
@@ -16,8 +20,14 @@ export default class Status extends Base {
 
     this.repo.index.writeUpdates();
 
-    this.changed.forEach((file) => console.log(` M ${file}`));
-    this.untracked.forEach((file) => console.log(`?? ${file}`));
+    this.printResults();
+  }
+
+  private printResults() {
+    this.changed.forEach((path) =>
+      console.log(`${this.statusFor(path)} ${path}`)
+    );
+    this.untracked.forEach((path) => console.log(`?? ${path}`));
   }
 
   private scanWorkspace(prefix: string = ''): void {
@@ -41,8 +51,13 @@ export default class Status extends Base {
   private checkIndexEntry = (entry: Entry): void => {
     const stat = this.stats[entry.path];
 
-    if (stat && !entry.statMatch(stat)) {
-      this.changed.push(entry.path);
+    if (!stat) {
+      this.recordChange(entry.path, DELETED);
+      return;
+    }
+
+    if (!entry.statMatch(stat)) {
+      this.recordChange(entry.path, MODIFIED);
       return;
     }
 
@@ -55,9 +70,19 @@ export default class Status extends Base {
     if (entry.oid === oid) {
       this.repo.index.updateEntryStat(entry, stat);
     } else {
-      this.changed.push(entry.path);
+      this.recordChange(entry.path, MODIFIED);
     }
   };
+
+  private recordChange(path: string, type: string): void {
+    this.changed.push(path);
+
+    if (!this.changes.has(path)) {
+      this.changes.set(path, new Set([type]));
+    } else {
+      this.changes.get(path)?.add(type);
+    }
+  }
 
   private trackableFile(path: string, stat: Stats): boolean {
     if (!stat) return false;
@@ -73,5 +98,16 @@ export default class Status extends Base {
     return Object.entries(items).some(([childPath, childStat]) =>
       this.trackableFile(childPath, childStat)
     );
+  }
+
+  private statusFor(path: string): string {
+    const changes = this.changes.get(path);
+
+    let status: string = '';
+
+    if (changes?.has(DELETED)) status = ' D';
+    if (changes?.has(MODIFIED)) status = ' M';
+
+    return status;
   }
 }

@@ -1,4 +1,4 @@
-import { chmodSync, mkdirSync, writeFileSync } from 'fs';
+import { chmodSync, mkdirSync, rmdirSync, rmSync, writeFileSync } from 'fs';
 import Init from 'lib/command/Init.js';
 import Status from 'lib/command/Status.js';
 import { JitCommand } from 'lib/types/JitCommand.js';
@@ -184,5 +184,25 @@ describe('Status', () => {
     new Status({ root: rootPath }).run();
 
     expect(logger.calls).toEqual([]);
+  });
+
+  it('reports deleted files', () => {
+    rmSync(join(rootPath, 'a/2.txt'));
+
+    const logger = createConsoleLogSpy();
+
+    new Status({ root: rootPath }).run();
+
+    expect(logger.calls).toEqual([' D a/2.txt']);
+  });
+
+  it('reports files in deleted directories', () => {
+    rmdirSync(join(rootPath, 'a'), { recursive: true });
+
+    const logger = createConsoleLogSpy();
+
+    new Status({ root: rootPath }).run();
+
+    expect(logger.calls).toEqual([' D a/2.txt', ' D a/b/3.txt']);
   });
 });
