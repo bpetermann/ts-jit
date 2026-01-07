@@ -3,7 +3,7 @@ import { JitObject } from '../types/JitObject.js';
 export default class Blob implements JitObject {
   private _oid: string | undefined;
 
-  constructor(private readonly data: NonSharedBuffer) {}
+  constructor(private readonly data: Buffer) {}
 
   get oid(): string {
     return this._oid as string;
