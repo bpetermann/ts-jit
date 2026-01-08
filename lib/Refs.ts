@@ -14,14 +14,15 @@ export default class Refs {
       throw new Error(
         `jit: failed to write ID in HEAD: ${
           e instanceof Error ? e.message : String(e)
-        }`
+        }`,
       );
     }
   }
 
-  readHead(): NonSharedBuffer | undefined {
+  readHead(): string | undefined {
     if (existsSync(this.headPath)) {
-      return readFileSync(this.headPath);
+      const content = readFileSync(this.headPath, 'utf8').trim();
+      return content || undefined;
     }
   }
 }

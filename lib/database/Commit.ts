@@ -5,10 +5,10 @@ export default class Commit implements JitObject {
   private _oid: string | undefined;
 
   constructor(
-    private parent: NonSharedBuffer | undefined,
+    private parent: string | undefined,
     private tree: string,
     private author: Author,
-    private message: string
+    private message: string,
   ) {}
 
   get oid(): string | undefined {
