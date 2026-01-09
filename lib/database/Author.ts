@@ -3,7 +3,7 @@ export default class Author {
     private name?: string,
     private email?: string,
     private timestamp?: number,
-    private timezone: string = Author.formatTimezone(new Date())
+    private timezone: string = Author.formatTimezone(new Date()),
   ) {}
 
   static formatTimezone(date: Date): string {
@@ -17,5 +17,13 @@ export default class Author {
 
   toString(): string {
     return `${this.name} <${this.email}> ${this.timestamp} ${this.timezone}`;
+  }
+
+  static parse(line: string): Author {
+    const match = line.match(/^(.*) <(.*)> (\d+) ([+-]\d{4})$/);
+    if (!match) return new Author(line);
+
+    const [, name, email, ts, tz] = match;
+    return new Author(name, email, parseInt(ts, 10), tz);
   }
 }
